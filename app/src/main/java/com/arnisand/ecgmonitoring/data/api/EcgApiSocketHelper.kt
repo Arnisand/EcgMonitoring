@@ -64,7 +64,7 @@ class EcgApiSocketHelper: ApiSocketHelper {
         }
 
         override fun onError(ex: Exception?) {
-//            sendBroadcast(SocketActionType.FAILURE.action)  // todo send broad
+            sendBroadcast(SocketType.FAILURE.index)
             Log.e("socket error", Log.getStackTraceString(ex))
         }
 
@@ -87,9 +87,10 @@ class EcgApiSocketHelper: ApiSocketHelper {
     }
 
     enum class SocketType(val index: Int) {
-        OPEN(101),
-        CLOSE(102),
-        MESSAGE(103)
+        OPEN(100),
+        CLOSE(101),
+        MESSAGE(102),
+        FAILURE(103)
     }
 
     companion object {

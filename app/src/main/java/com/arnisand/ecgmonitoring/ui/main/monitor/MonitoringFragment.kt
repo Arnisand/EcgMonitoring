@@ -4,14 +4,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Resources
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.arnisand.ecgmonitoring.background.SocketService
 import com.arnisand.ecgmonitoring.data.api.EcgApiSocketHelper
 import com.arnisand.ecgmonitoring.data.api.EcgApiSocketHelper.Companion.SOCKET_BROADCAST_ACTION
 import com.arnisand.ecgmonitoring.ui.base.BaseFragment
@@ -36,11 +37,35 @@ class MonitoringFragment : BaseFragment() {
         view_graph.viewport.isYAxisBoundsManual = true
         view_graph.viewport.setMinY(-2.0)
         view_graph.viewport.setMaxY(2.0)
+
+        btn_connect.setOnClickListener {
+            it.isEnabled = false
+            activity?.startService(Intent(context, SocketService::class.java))
+        }
     }
+
+
+    // todo for test
+    private val mHandler = Handler()
+    private var mTimer1: Runnable? = null
+
+    private val testDate = Date().time
 
     override fun onResume() {
         super.onResume()
         context?.let { LocalBroadcastManager.getInstance(it).registerReceiver(ecgReceiver, IntentFilter(SOCKET_BROADCAST_ACTION)) }
+
+        //todo for test
+        mTimer1 = object : Runnable {
+            override fun run() {
+                val generateData = generateData()
+                lineGraphSeries.appendData(generateData, true, 60)
+//                view_graph.addSeries(lineGraphSeries)
+                view_graph.onDataChanged(true, true)
+                mHandler.postDelayed(this, 300)
+            }
+        }
+        mHandler.postDelayed(mTimer1, 300)
     }
 
     override fun onPause() {
@@ -52,16 +77,20 @@ class MonitoringFragment : BaseFragment() {
         Log.d(TAG, message)
         message.toDoubleOrNull()?.let {
             lineGraphSeries.appendData(DataPoint(Date().time.toDouble(), it), true, 60)
-            view_graph.addSeries(lineGraphSeries)
+//            view_graph.addSeries(lineGraphSeries)
         }
     }
 
     fun statusConnected(status: Boolean) {
-        context?.let {context ->
+        context?.let { context ->
             if (status) {
                 indicator_connect.setBackgroundColor(ContextCompat.getColor(context, R.color.colorIndicatorOnline))
+                btn_connect.visibility = View.INVISIBLE
+                btn_connect.isEnabled = false
             } else {
                 indicator_connect.setBackgroundColor(ContextCompat.getColor(context, R.color.colorIndicatorOffline))
+                btn_connect.visibility = View.VISIBLE
+                btn_connect.isEnabled = true
             }
         }
     }
@@ -84,6 +113,9 @@ class MonitoringFragment : BaseFragment() {
                     EcgApiSocketHelper.SocketType.CLOSE.index -> {
                         wMonitoringFragment.get()?.statusConnected(false)
                     }
+                    EcgApiSocketHelper.SocketType.FAILURE.index -> {
+                        wMonitoringFragment.get()?.statusConnected(false)
+                    }
                     else -> {
                     }
                 }
@@ -91,6 +123,15 @@ class MonitoringFragment : BaseFragment() {
             }
         }
     }
+
+    private fun generateData(): DataPoint {
+        val x = (Date().time - testDate).toDouble()
+        val f = mRand.nextDouble() * 100 + 0.3
+        val y = Math.sin((Date().time - testDate).toDouble() * f + 2) + mRand.nextDouble() * 0.3
+        return DataPoint(x, y)
+    }
+
+    private var mRand = Random()
 
     companion object {
         val TAG: String = MonitoringFragment::class.jvmName

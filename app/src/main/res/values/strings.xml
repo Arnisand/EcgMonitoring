@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">egcmonitoring</string>
+    <string name="button_connect">connect</string>
+    <string name="indicator_connect_description">indicator_connect</string>
 </resources>

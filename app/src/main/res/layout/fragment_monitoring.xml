@@ -7,15 +7,26 @@
     <com.jjoe64.graphview.GraphView
         android:id="@+id/view_graph"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"/>
+
+    <Button
+        android:id="@+id/btn_connect"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/button_connect"
+        app:layout_constraintRight_toLeftOf="@+id/indicator_connect"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
 
     <ImageView
         android:id="@+id/indicator_connect"
         android:layout_width="10dp"
         android:layout_height="10dp"
-        android:contentDescription="indicator_connect"
+        android:contentDescription="@string/indicator_connect_description"
         android:layout_margin="10dp"
         android:background="@color/colorIndicatorOffline"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_connect"
+        app:layout_constraintLeft_toRightOf="@+id/btn_connect"
         app:layout_constraintRight_toRightOf="parent"/>
 </android.support.constraint.ConstraintLayout>
