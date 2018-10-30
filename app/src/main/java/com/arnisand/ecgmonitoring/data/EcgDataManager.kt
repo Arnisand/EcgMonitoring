@@ -1,11 +1,9 @@
 package com.arnisand.ecgmonitoring.data
 
-import com.arnisand.ecgmonitoring.background.SocketService
 import com.arnisand.ecgmonitoring.data.api.ApiSocketHelper
-import com.arnisand.ecgmonitoring.data.api.EcgApiSocketHelper
+import javax.inject.Inject
 
-class EcgDataManager: DataManager {
-    private val ecgSocketHelper: ApiSocketHelper = EcgApiSocketHelper()
+class EcgDataManager @Inject constructor(private val ecgSocketHelper: ApiSocketHelper): DataManager {
 
     override fun openSocketConnection(token: String) = ecgSocketHelper.openSocketConnection(token)
 

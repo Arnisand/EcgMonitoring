@@ -13,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.arnisand.ecgmonitoring.background.SocketService
-import com.arnisand.ecgmonitoring.data.api.EcgApiSocketHelper
 import com.arnisand.ecgmonitoring.data.api.EcgApiSocketHelper.Companion.SOCKET_BROADCAST_ACTION
 import com.arnisand.ecgmonitoring.ui.base.BaseFragment
 import com.arnisand.egcmonitoring.R
@@ -23,12 +22,22 @@ import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.DataPoint
 import kotlinx.android.synthetic.main.fragment_monitoring.*
 import java.util.*
+import javax.inject.Inject
 
 
-class MonitoringFragment : BaseFragment() {
+class MonitoringFragment : BaseFragment(), IMonitoringFragment {
+
+    @Inject
+    lateinit var presenter: IMonitoringPresenter
 
     private var ecgReceiver: EcgReceiver = EcgReceiver(this)
     private val lineGraphSeries = LineGraphSeries<DataPoint>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mFragmentComponent.inject(this)
+        presenter.attachView(this)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? = inflater.inflate(R.layout.fragment_monitoring, container, false)
 
@@ -44,28 +53,12 @@ class MonitoringFragment : BaseFragment() {
         }
     }
 
-
-    // todo for test
-    private val mHandler = Handler()
-    private var mTimer1: Runnable? = null
-
-    private val testDate = Date().time
-
     override fun onResume() {
         super.onResume()
         context?.let { LocalBroadcastManager.getInstance(it).registerReceiver(ecgReceiver, IntentFilter(SOCKET_BROADCAST_ACTION)) }
 
         //todo for test
-        mTimer1 = object : Runnable {
-            override fun run() {
-                val generateData = generateData()
-                lineGraphSeries.appendData(generateData, true, 60)
-//                view_graph.addSeries(lineGraphSeries)
-                view_graph.onDataChanged(true, true)
-                mHandler.postDelayed(this, 300)
-            }
-        }
-        mHandler.postDelayed(mTimer1, 300)
+        startGenerateDate()
     }
 
     override fun onPause() {
@@ -73,15 +66,20 @@ class MonitoringFragment : BaseFragment() {
         super.onPause()
     }
 
-    fun newDataEcg(message: String) {
+    override fun onDestroy() {
+        presenter.detachView()
+        super.onDestroy()
+    }
+
+    override fun newDataEcg(message: String) {
         Log.d(TAG, message)
         message.toDoubleOrNull()?.let {
             lineGraphSeries.appendData(DataPoint(Date().time.toDouble(), it), true, 60)
-//            view_graph.addSeries(lineGraphSeries)
+            view_graph.addSeries(lineGraphSeries)
         }
     }
 
-    fun statusConnected(status: Boolean) {
+    override fun statusConnected(status: Boolean) {
         context?.let { context ->
             if (status) {
                 indicator_connect.setBackgroundColor(ContextCompat.getColor(context, R.color.colorIndicatorOnline))
@@ -96,32 +94,32 @@ class MonitoringFragment : BaseFragment() {
     }
 
     class EcgReceiver(monitoringFragment: MonitoringFragment) : BroadcastReceiver() {
-
         private val wMonitoringFragment = WeakReference(monitoringFragment)
 
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.takeIf { it.hasExtra(EcgApiSocketHelper.SOCKET_MESSAGE_TYPE) }?.let {
-                when (it.getIntExtra(EcgApiSocketHelper.SOCKET_MESSAGE_TYPE, 0)) {
-                    EcgApiSocketHelper.SocketType.MESSAGE.index -> {
-                        wMonitoringFragment.get()?.newDataEcg(it.getStringExtra(EcgApiSocketHelper.SOCKET_MESSAGE))
-                    }
+        override fun onReceive(context: Context?, intent: Intent) {
+            wMonitoringFragment.get()?.presenter?.handleMessage(intent)
+        }
+    }
 
-                    EcgApiSocketHelper.SocketType.OPEN.index -> {
-                        wMonitoringFragment.get()?.statusConnected(true)
-                    }
+    /** todo for test
+    move to service */
+    private val mHandler = Handler()
+    private var mTimer1: Runnable? = null
 
-                    EcgApiSocketHelper.SocketType.CLOSE.index -> {
-                        wMonitoringFragment.get()?.statusConnected(false)
-                    }
-                    EcgApiSocketHelper.SocketType.FAILURE.index -> {
-                        wMonitoringFragment.get()?.statusConnected(false)
-                    }
-                    else -> {
-                    }
-                }
+    private val testDate = Date().time
+    private var mRand = Random()
 
+    private fun startGenerateDate() {
+        mTimer1 = object : Runnable {
+            override fun run() {
+                val generateData = generateData()
+                lineGraphSeries.appendData(generateData, true, 60)
+                view_graph.addSeries(lineGraphSeries)
+                view_graph.onDataChanged(true, true)
+                mHandler.postDelayed(this, 300)
             }
         }
+        mHandler.postDelayed(mTimer1, 300)
     }
 
     private fun generateData(): DataPoint {
@@ -130,8 +128,6 @@ class MonitoringFragment : BaseFragment() {
         val y = Math.sin((Date().time - testDate).toDouble() * f + 2) + mRand.nextDouble() * 0.3
         return DataPoint(x, y)
     }
-
-    private var mRand = Random()
 
     companion object {
         val TAG: String = MonitoringFragment::class.jvmName

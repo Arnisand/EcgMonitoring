@@ -12,8 +12,9 @@ import org.java_websocket.framing.Framedata
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
 import java.net.URI
+import javax.inject.Inject
 
-class EcgApiSocketHelper: ApiSocketHelper {
+class EcgApiSocketHelper @Inject constructor(): ApiSocketHelper {
 
     private var socketClient: WebSocketClient? = null
 

@@ -1,8 +1,8 @@
 package com.arnisand.ecgmonitoring.ui.base
 
-interface MvpPresenter {
+interface MvpPresenter<V : MvpView> {
 
-    fun attachView()
+    fun attachView(mvpView: V)
     fun detachView()
-    fun getView(): MvpView?
+    fun getView(): V?
 }
