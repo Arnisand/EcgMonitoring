@@ -18,7 +18,17 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setDefaultFragment()
+
+        savedInstanceState ?: setDefaultFragment()
+    }
+
+    override fun onStart() {
+        super.onStart()
         startService(Intent(applicationContext, SocketService::class.java))
+    }
+
+    override fun onStop() {
+        super.onStop()
+        stopService(Intent(applicationContext, SocketService::class.java))
     }
 }

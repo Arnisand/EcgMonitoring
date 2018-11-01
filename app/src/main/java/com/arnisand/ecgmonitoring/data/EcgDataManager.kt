@@ -5,7 +5,7 @@ import javax.inject.Inject
 
 class EcgDataManager @Inject constructor(private val ecgSocketHelper: ApiSocketHelper): DataManager {
 
-    override fun openSocketConnection(token: String) = ecgSocketHelper.openSocketConnection(token)
+    override fun openSocketConnection() = ecgSocketHelper.openSocketConnection()
 
     override fun closeSocketConnection() = ecgSocketHelper.closeSocketConnection()
 

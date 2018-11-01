@@ -13,11 +13,9 @@ class MonitoringPresenter @Inject constructor() : BasePresenter<IMonitoringFragm
                 EcgApiSocketHelper.SocketType.MESSAGE.index -> {
                     getView()?.newDataEcg(it.getStringExtra(EcgApiSocketHelper.SOCKET_MESSAGE))
                 }
-
                 EcgApiSocketHelper.SocketType.OPEN.index -> {
                     getView()?.statusConnected(true)
                 }
-
                 EcgApiSocketHelper.SocketType.CLOSE.index -> {
                     getView()?.statusConnected(false)
                 }

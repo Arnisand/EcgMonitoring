@@ -22,7 +22,6 @@ class EcgApplication : Application() {
 
     companion object {
         lateinit var instance: EcgApplication
-        var mDataManager: DataManager? = null
 
         val applicationComponent: ApplicationComponent
             get() = instance.mApplicationComponent
