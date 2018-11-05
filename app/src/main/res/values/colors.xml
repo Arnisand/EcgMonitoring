@@ -6,4 +6,6 @@
 
     <color name="colorIndicatorOnline">#0f0</color>
     <color name="colorIndicatorOffline">#f00</color>
+
+    <color name="colorBackgroundButton">#c83F51B5</color>
 </resources>

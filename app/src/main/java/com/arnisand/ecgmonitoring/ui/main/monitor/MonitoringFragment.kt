@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.os.Handler
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
@@ -30,8 +29,10 @@ class MonitoringFragment : BaseFragment(), IMonitoringFragment {
     @Inject
     lateinit var presenter: IMonitoringPresenter
 
-    private var ecgReceiver: EcgReceiver = EcgReceiver(this)
-    private val lineGraphSeries = LineGraphSeries<DataPoint>()
+    private var mEcgReceiver: EcgReceiver = EcgReceiver(this)
+    private val mLineGraphSeries = LineGraphSeries<DataPoint>()
+
+    private val startTime = Date().time
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,11 +56,11 @@ class MonitoringFragment : BaseFragment(), IMonitoringFragment {
 
     override fun onResume() {
         super.onResume()
-        context?.let { LocalBroadcastManager.getInstance(it).registerReceiver(ecgReceiver, IntentFilter(SOCKET_BROADCAST_ACTION)) }
+        context?.let { LocalBroadcastManager.getInstance(it).registerReceiver(mEcgReceiver, IntentFilter(SOCKET_BROADCAST_ACTION)) }
     }
 
     override fun onPause() {
-        context?.let { LocalBroadcastManager.getInstance(it).unregisterReceiver(ecgReceiver) }
+        context?.let { LocalBroadcastManager.getInstance(it).unregisterReceiver(mEcgReceiver) }
         super.onPause()
     }
 
@@ -71,8 +72,8 @@ class MonitoringFragment : BaseFragment(), IMonitoringFragment {
     override fun newDataEcg(message: String) {
         Log.d(TAG, message)
         message.toDoubleOrNull()?.let {
-            lineGraphSeries.appendData(DataPoint(Date().time.toDouble(), it), true, 120)
-            view_graph.addSeries(lineGraphSeries)
+            mLineGraphSeries.appendData(DataPoint((Date().time - startTime).toDouble(), it), true, 120)
+            view_graph.addSeries(mLineGraphSeries)
         }
     }
 
